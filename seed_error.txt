@@ -1,0 +1,15 @@
+﻿≡ƒî▒ Seeding WorkshopPulse database...
+Γ£à Users created
+Γ£à Customers created
+Γ£à Vehicles created
+Γ£à Parts created
+Γ£à Job cards created
+Γ£à Status logs created
+Γ£à Job parts + inventory movements created
+Γ£à Payments created
+
+Γ£¿ Seed complete! Demo credentials:
+   ≡ƒæñ Admin:     phone: 0201000001  password: admin123
+   ≡ƒöº Tech 1:    phone: 0201000002  password: tech123
+   ≡ƒöº Tech 2:    phone: 0201000003  password: tech123
+  
