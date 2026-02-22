@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState, use } from 'react'
+import { useEffect, useState, use, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { formatCurrency, formatDate } from '@/components/ui'
 
@@ -13,7 +13,7 @@ interface JobDetail {
     payment?: { method: string; status: string; paidAt: string | null }
 }
 
-export default function PrintPage({ params }: { params: Promise<{ id: string }> }) {
+function PrintContent({ params }: { params: Promise<{ id: string }> }) {
     const { id } = use(params)
     const searchParams = useSearchParams()
     const type = searchParams.get('type') || 'invoice'
@@ -173,5 +173,13 @@ export default function PrintPage({ params }: { params: Promise<{ id: string }> 
                 }
             `}</style>
         </div>
+    )
+}
+
+export default function PrintPage({ params }: { params: Promise<{ id: string }> }) {
+    return (
+        <Suspense fallback={<div style={{ padding: 40, textAlign: 'center' }}>Loading document...</div>}>
+            <PrintContent params={params} />
+        </Suspense>
     )
 }

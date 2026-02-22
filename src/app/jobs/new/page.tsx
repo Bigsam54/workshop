@@ -93,7 +93,7 @@ export default function NewJobPage() {
             <AppSidebar />
             <main className="main-content">
                 <div className="page-content" style={{ maxWidth: 640 }}>
-                    <div style={{ display: 'flex', align: 'center', gap: 12, marginBottom: 24 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
                         <button className="btn btn-secondary btn-icon btn-sm" onClick={() => router.back()}><ArrowLeft size={16} /></button>
                         <div>
                             <h1>New Job Card</h1>

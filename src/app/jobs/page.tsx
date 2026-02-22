@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/context/AuthContext'
@@ -18,7 +18,7 @@ interface Job {
     createdAt: string
 }
 
-export default function JobsPage() {
+function JobsContent() {
     const { user, loading } = useAuth()
     const router = useRouter()
     const searchParams = useSearchParams()
@@ -143,5 +143,13 @@ export default function JobsPage() {
                 </div>
             </main>
         </div>
+    )
+}
+
+export default function JobsPage() {
+    return (
+        <Suspense fallback={<div className="loading"><div className="spinner" /></div>}>
+            <JobsContent />
+        </Suspense>
     )
 }

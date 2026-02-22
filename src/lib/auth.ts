@@ -7,7 +7,7 @@ const secret = new TextEncoder().encode(
 
 export interface JWTPayload {
     userId: number
-    role: 'ADMIN' | 'SECRETARY'
+    role: 'ADMIN' | 'SECRETARY' | 'TECH'
     name: string
 }
 
