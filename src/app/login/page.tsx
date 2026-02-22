@@ -9,7 +9,7 @@ export default function LoginPage() {
     const { login, user } = useAuth()
     const { toast } = useToast()
     const router = useRouter()
-    const [phone, setPhone] = useState('')
+    const [username, setUsername] = useState('')
     const [password, setPassword] = useState('')
     const [loading, setLoading] = useState(false)
     const [bgIndex, setBgIndex] = useState(0)
@@ -35,7 +35,7 @@ export default function LoginPage() {
         e.preventDefault()
         setLoading(true)
         try {
-            await login(phone, password)
+            await login(username, password)
             toast('Welcome back! Logged in successfully.', 'success')
             router.push('/dashboard')
         } catch (err: unknown) {
@@ -135,16 +135,16 @@ export default function LoginPage() {
 
                     <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
                         <div className="form-group">
-                            <label className="form-label" style={{ textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: 12, fontWeight: 700, marginBottom: 12, display: 'block', opacity: 0.6 }}>Phone Number</label>
+                            <label className="form-label" style={{ textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: 12, fontWeight: 700, marginBottom: 12, display: 'block', opacity: 0.6 }}>Username</label>
                             <div style={{ position: 'relative' }}>
-                                <Phone size={18} style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', opacity: 0.4 }} />
+                                <ArrowRight size={18} style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', opacity: 0.4 }} />
                                 <input
                                     className="form-input"
                                     style={{ paddingLeft: 48, height: 56, borderRadius: 12, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', fontSize: '1.1rem' }}
-                                    type="tel"
-                                    placeholder="0201000001"
-                                    value={phone}
-                                    onChange={e => setPhone(e.target.value)}
+                                    type="text"
+                                    placeholder="Workshop"
+                                    value={username}
+                                    onChange={e => setUsername(e.target.value)}
                                     required
                                 />
                             </div>
@@ -197,11 +197,11 @@ export default function LoginPage() {
                         <div style={{ display: 'grid', gap: 12 }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
                                 <span style={{ opacity: 0.6 }}>Super Admin</span>
-                                <code style={{ color: '#fbbf24', fontWeight: 700 }}>0201000001</code>
+                                <code style={{ color: '#fbbf24', fontWeight: 700 }}>Workshop</code>
                             </div>
                             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13 }}>
                                 <span style={{ opacity: 0.6 }}>Secretary Hub</span>
-                                <code style={{ color: '#fbbf24', fontWeight: 700 }}>0201000002</code>
+                                <code style={{ color: '#fbbf24', fontWeight: 700 }}>Evelyn</code>
                             </div>
                         </div>
                     </div>

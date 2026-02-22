@@ -5,13 +5,13 @@ interface User {
     id: number
     name: string
     role: string
-    phone: string
+    username: string
 }
 
 interface AuthContextType {
     user: User | null
     loading: boolean
-    login: (phone: string, password: string) => Promise<void>
+    login: (username: string, password: string) => Promise<void>
     logout: () => Promise<void>
 }
 
@@ -28,11 +28,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             .finally(() => setLoading(false))
     }, [])
 
-    const login = async (phone: string, password: string) => {
+    const login = async (username: string, password: string) => {
         const res = await fetch('/api/auth/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ phone, password }),
+            body: JSON.stringify({ username, password }),
         })
         if (!res.ok) {
             const data = await res.json()

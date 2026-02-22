@@ -5,13 +5,13 @@ import bcrypt from 'bcryptjs'
 
 export async function POST(req: NextRequest) {
     try {
-        const { phone, password } = await req.json()
+        const { username, password } = await req.json()
 
-        if (!phone || !password) {
-            return NextResponse.json({ error: 'Phone and password required' }, { status: 400 })
+        if (!username || !password) {
+            return NextResponse.json({ error: 'Username and password required' }, { status: 400 })
         }
 
-        const user = await prisma.user.findUnique({ where: { phone } })
+        const user = await prisma.user.findUnique({ where: { username } })
         if (!user) {
             return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 })
         }
@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
         const token = await signToken({ userId: user.id, role: user.role as any, name: user.name })
 
         const response = NextResponse.json({
-            user: { id: user.id, name: user.name, role: user.role, phone: user.phone }
+            user: { id: user.id, name: user.name, role: user.role, username: user.username }
         })
         response.cookies.set('token', token, {
             httpOnly: true,

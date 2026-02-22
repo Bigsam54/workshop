@@ -22,22 +22,22 @@ async function main() {
 
   // ─── USERS ───────────────────────────────────────────────────
   const admin = await prisma.user.create({
-    data: { name: 'Super Admin', phone: '0201000001', role: 'ADMIN' as any, passwordHash: hash }
+    data: { name: 'Super Admin', username: 'Workshop', role: 'ADMIN' as any, passwordHash: hash }
   })
   const tech1 = await prisma.user.create({
-    data: { name: 'Kwadwo Mechanic', phone: '0201000002', role: 'TECH' as any, passwordHash: techHash }
+    data: { name: 'Kwadwo Mechanic', username: 'Kwadwo', role: 'TECH' as any, passwordHash: techHash }
   })
   const tech2 = await prisma.user.create({
-    data: { name: 'Isaac AutoTech', phone: '0201000003', role: 'TECH' as any, passwordHash: techHash }
+    data: { name: 'Isaac AutoTech', username: 'Isaac', role: 'TECH' as any, passwordHash: techHash }
   })
   const tech3 = await prisma.user.create({
-    data: { name: 'Samuel Gears', phone: '0201000005', role: 'TECH' as any, passwordHash: techHash }
+    data: { name: 'Samuel Gears', username: 'Samuel', role: 'TECH' as any, passwordHash: techHash }
   })
   const tech4 = await prisma.user.create({
-    data: { name: 'Emmanuel Spark', phone: '0201000006', role: 'TECH' as any, passwordHash: techHash }
+    data: { name: 'Emmanuel Spark', username: 'Emmanuel', role: 'TECH' as any, passwordHash: techHash }
   })
   const secretary = await prisma.user.create({
-    data: { name: 'Evelyn Admin', phone: '0201000004', role: 'SECRETARY' as any, passwordHash: hash }
+    data: { name: 'Evelyn Admin', username: 'Evelyn', role: 'SECRETARY' as any, passwordHash: hash }
   })
 
   console.log('✅ Users restored (Admin, Secretary, 2 Technicians)')
