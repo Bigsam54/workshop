@@ -39,6 +39,9 @@ model Vehicle {
   make        String
   model       String
   year        Int
+  previousWork String?
+  history     String?
+  notes       String?
   createdAt   DateTime @default(now())
 
   customer Customer  @relation(fields: [customerId], references: [id])

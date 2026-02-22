@@ -25,7 +25,11 @@ export function ToastProvider({ children }: { children: ReactNode }) {
 
     const dismiss = (id: number) => setToasts(prev => prev.filter(t => t.id !== id))
 
-    const icons = { success: <CheckCircle size={16} />, error: <XCircle size={16} />, info: <Info size={16} /> }
+    const icons = {
+        success: <CheckCircle className="toast-icon" size={18} />,
+        error: <XCircle className="toast-icon" size={18} />,
+        info: <Info className="toast-icon" size={18} />
+    }
 
     return (
         <ToastContext.Provider value={{ toast }}>
@@ -34,10 +38,11 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                 {toasts.map(t => (
                     <div key={t.id} className={`toast toast-${t.type}`}>
                         {icons[t.type]}
-                        <span style={{ flex: 1 }}>{t.message}</span>
-                        <button onClick={() => dismiss(t.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', paddingLeft: 4 }}>
+                        <div style={{ flex: 1, fontSize: '0.9rem', fontWeight: 500 }}>{t.message}</div>
+                        <button onClick={() => dismiss(t.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: 4, display: 'flex' }}>
                             <X size={14} />
                         </button>
+                        <div className="toast-progress" />
                     </div>
                 ))}
             </div>

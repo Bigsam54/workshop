@@ -6,11 +6,18 @@ import { useAuth } from '@/context/AuthContext'
 import { useToast } from '@/components/Toast'
 import { AppSidebar } from '@/components/AppSidebar'
 import { formatDate } from '@/components/ui'
-import { Plus, Search, X, Car, User, Mail, Phone, MapPin } from 'lucide-react'
+import { ClientRegistrationDrawer } from '@/components/ClientRegistrationDrawer'
+import { Plus, Search, X, Car, User, Mail, MapPin, TrendingUp } from 'lucide-react'
 
 interface Customer {
     id: number; name: string; phone: string; email: string | null; location: string | null; createdAt: string
     vehicles: Array<{ plateNumber: string; make: string; model: string }>
+    jobCards: Array<{
+        id: number;
+        status: string;
+        createdAt: string;
+        payment: { amount: number; status: string } | null
+    }>
     _count: { jobCards: number }
 }
 
@@ -25,11 +32,10 @@ export default function CustomersPage() {
     const [showVehicleModal, setShowVehicleModal] = useState(false)
     const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null)
 
-    const [cName, setCName] = useState(''); const [cPhone, setCPhone] = useState('')
-    const [cEmail, setCEmail] = useState(''); const [cLocation, setCLocation] = useState('')
-
     const [vPlate, setVPlate] = useState(''); const [vMake, setVMake] = useState('')
     const [vModel, setVModel] = useState(''); const [vYear, setVYear] = useState('')
+    const [vPrevWork, setVPrevWork] = useState(''); const [vHistory, setVHistory] = useState('')
+    const [vNotes, setVNotes] = useState('')
 
     const [saving, setSaving] = useState(false)
 
@@ -43,31 +49,49 @@ export default function CustomersPage() {
     }, [user, loading, router])
     useEffect(() => { if (user) { setFetching(true); fetchCustomers() } }, [user, fetchCustomers])
 
-    const createCustomer = async (e: FormEvent) => {
-        e.preventDefault()
-        setSaving(true)
-        const res = await fetch('/api/customers', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: cName, phone: cPhone, email: cEmail, location: cLocation }) })
-        if (res.ok) {
-            toast('New customer profile created', 'success')
-            setShowModal(false); setCName(''); setCPhone(''); setCEmail(''); setCLocation(''); fetchCustomers()
-        } else {
-            const d = await res.json()
-            toast(d.error || 'Failed to save', 'error')
-        }
-        setSaving(false)
+    const handleRegistrationSuccess = () => {
+        fetchCustomers()
+    }
+
+    const calculateLifetimeSpend = (c: Customer) => {
+        return c.jobCards.reduce((acc, job) => {
+            if (job.payment?.status === 'PAID') return acc + job.payment.amount
+            return acc
+        }, 0)
+    }
+
+    const getLastVisit = (c: Customer) => {
+        if (c.jobCards.length === 0) return 'Never'
+        return formatDate(c.jobCards[0].createdAt)
     }
 
     const addVehicle = async (e: FormEvent) => {
         e.preventDefault()
         if (!selectedCustomer) return
         setSaving(true)
-        const res = await fetch('/api/vehicles', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ customerId: selectedCustomer.id, plateNumber: vPlate, make: vMake, model: vModel, year: Number(vYear) }) })
+        const res = await fetch('/api/vehicles', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                customerId: selectedCustomer.id,
+                plateNumber: vPlate,
+                make: vMake,
+                model: vModel,
+                year: Number(vYear),
+                previousWork: vPrevWork,
+                history: vHistory,
+                notes: vNotes
+            })
+        })
         if (res.ok) {
-            toast('Vehicle registered to owner', 'success')
-            setShowVehicleModal(false); setVPlate(''); setVMake(''); setVModel(''); setVYear(''); fetchCustomers()
+            toast('Vehicle added successfully', 'success')
+            setShowVehicleModal(false);
+            setVPlate(''); setVMake(''); setVModel(''); setVYear('')
+            setVPrevWork(''); setVHistory(''); setVNotes('')
+            fetchCustomers()
         } else {
             const d = await res.json()
-            toast(d.error || 'Failed to register vehicle', 'error')
+            toast(d.error || 'Failed to update vehicle log', 'error')
         }
         setSaving(false)
     }
@@ -90,7 +114,7 @@ export default function CustomersPage() {
                         <input
                             className="form-input"
                             style={{ paddingLeft: 48, height: 50, background: 'var(--bg-card)', border: '1px solid var(--border)' }}
-                            placeholder="Find records by name, phone digit, or email address..."
+                            placeholder="Find records by name, phone number, or email address..."
                             value={search} onChange={e => setSearch(e.target.value)}
                         />
                     </div>
@@ -109,62 +133,77 @@ export default function CustomersPage() {
                                         <thead>
                                             <tr>
                                                 <th>Identification</th>
-                                                <th>Phone Contact</th>
-                                                <th>Email & Address</th>
+                                                <th>Contact & Region</th>
                                                 <th>Vehicles Owned</th>
-                                                <th>Activity</th>
+                                                <th style={{ minWidth: 200 }}>Master Terminal Insights</th>
                                                 <th style={{ textAlign: 'right' }}>Actions</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {customers.map(c => (
-                                                <tr key={c.id}>
-                                                    <td>
-                                                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                                                            <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--bg-app)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                                                <User size={14} color="var(--primary-light)" />
+                                            {customers.map(c => {
+                                                const lifetimeSpend = calculateLifetimeSpend(c)
+                                                const lastVisit = getLastVisit(c)
+                                                const visitFreq = c.jobCards.length > 0
+                                                    ? (c.jobCards.length / Math.max(0.1, (new Date().getTime() - new Date(c.createdAt).getTime()) / (1000 * 60 * 60 * 24 * 365))).toFixed(1)
+                                                    : '0'
+
+                                                return (
+                                                    <tr key={c.id}>
+                                                        <td>
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                                                                <div style={{ width: 40, height: 40, borderRadius: '12px', background: 'var(--bg-app)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--border)' }}>
+                                                                    <User size={18} color="var(--primary-light)" />
+                                                                </div>
+                                                                <div>
+                                                                    <div className="bold" style={{ fontSize: 15 }}>{c.name}</div>
+                                                                    <div style={{ fontSize: 10, opacity: 0.4, letterSpacing: '0.05em' }}>UID: {c.id.toString().padStart(4, '0')}</div>
+                                                                </div>
                                                             </div>
-                                                            <div>
-                                                                <div className="bold">{c.name}</div>
-                                                                <div style={{ fontSize: 10, opacity: 0.4 }}>ID: CID-{c.id}</div>
+                                                        </td>
+                                                        <td>
+                                                            <div className="bold" style={{ color: 'var(--text-main)' }}>{c.phone}</div>
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, opacity: 0.5, marginTop: 4 }}>
+                                                                <MapPin size={11} /> {c.location || 'Not Specified'}
                                                             </div>
-                                                        </div>
-                                                    </td>
-                                                    <td className="bold">{c.phone}</td>
-                                                    <td>
-                                                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12 }}>
-                                                            <Mail size={12} style={{ opacity: 0.4 }} /> {c.email || <span style={{ opacity: 0.3 }}>N/A</span>}
-                                                        </div>
-                                                        <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 11, opacity: 0.6, marginTop: 4 }}>
-                                                            <MapPin size={11} style={{ opacity: 0.4 }} /> {c.location || 'Unknown'}
-                                                        </div>
-                                                    </td>
-                                                    <td>
-                                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                                                            {c.vehicles.map((v, i) => (
-                                                                <span key={i} className="badge" style={{ background: 'var(--bg-app)', color: 'var(--text-main)', border: '1px solid var(--border)', fontSize: 10 }}>
-                                                                    {v.plateNumber}
-                                                                </span>
-                                                            ))}
-                                                            {c.vehicles.length === 0 && <span style={{ fontSize: 11, opacity: 0.3 }}>Empty</span>}
-                                                        </div>
-                                                    </td>
-                                                    <td>
-                                                        <div style={{ fontSize: 13 }}><span className="bold" style={{ color: 'var(--primary-light)' }}>{c._count.jobCards}</span> Work Orders</div>
-                                                        <div style={{ fontSize: 10, opacity: 0.4 }}>Member since: {formatDate(c.createdAt)}</div>
-                                                    </td>
-                                                    <td style={{ textAlign: 'right' }}>
-                                                        <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
-                                                            <button className="btn btn-secondary btn-xs" onClick={() => { setSelectedCustomer(c); setShowVehicleModal(true) }}>
-                                                                <Car size={13} style={{ marginRight: 4 }} /> + Vehicle
-                                                            </button>
-                                                            <Link href={`/jobs/new?customerId=${c.id}`} className="btn btn-primary btn-xs">
-                                                                New Order
-                                                            </Link>
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                            ))}
+                                                        </td>
+                                                        <td>
+                                                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                                                                {c.vehicles.map((v, i) => (
+                                                                    <span key={i} className="badge" style={{ background: 'var(--bg-card)', color: 'var(--primary-light)', border: '1px dotted var(--primary)', fontSize: 10, padding: '2px 8px' }}>
+                                                                        {v.plateNumber}
+                                                                    </span>
+                                                                ))}
+                                                                {c.vehicles.length === 0 && <span style={{ fontSize: 11, opacity: 0.3 }}>No fleet recorded</span>}
+                                                            </div>
+                                                        </td>
+                                                        <td>
+                                                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                                                                <div>
+                                                                    <div style={{ fontSize: 10, opacity: 0.5, textTransform: 'uppercase', marginBottom: 2 }}>Lifetime Value</div>
+                                                                    <div className="bold" style={{ color: 'var(--status-completed)', fontSize: 14 }}>₵{lifetimeSpend.toLocaleString()}</div>
+                                                                </div>
+                                                                <div>
+                                                                    <div style={{ fontSize: 10, opacity: 0.5, textTransform: 'uppercase', marginBottom: 2 }}>Last Workshop</div>
+                                                                    <div className="bold" style={{ color: 'var(--primary-light)', fontSize: 12 }}>{lastVisit}</div>
+                                                                </div>
+                                                            </div>
+                                                            <div style={{ marginTop: 8, fontSize: 11, opacity: 0.6, display: 'flex', alignItems: 'center', gap: 4 }}>
+                                                                <TrendingUp size={10} /> {c.jobCards.length} Total visits ({visitFreq} / year)
+                                                            </div>
+                                                        </td>
+                                                        <td style={{ textAlign: 'right' }}>
+                                                            <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+                                                                <button className="btn btn-secondary btn-xs" style={{ background: 'rgba(255,255,255,0.02)' }} onClick={() => { setSelectedCustomer(c); setShowVehicleModal(true) }}>
+                                                                    <Car size={13} style={{ marginRight: 4 }} /> + Vehicle
+                                                                </button>
+                                                                <Link href={`/jobs/new?customerId=${c.id}`} className="btn btn-primary btn-xs">
+                                                                    <Plus size={13} style={{ marginRight: 4 }} /> New Order
+                                                                </Link>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                )
+                                            })}
                                         </tbody>
                                     </table>
                                 </div>
@@ -173,53 +212,48 @@ export default function CustomersPage() {
                 </div>
             </main>
 
-            {/* Registration Modal */}
-            {showModal && (
-                <div className="modal-overlay" onClick={() => setShowModal(false)}>
-                    <div className="modal" onClick={e => e.stopPropagation()}>
-                        <div className="modal-header">
-                            <h2>Client Registration</h2>
-                            <button className="btn btn-secondary btn-icon btn-sm" onClick={() => setShowModal(false)}><X size={16} /></button>
-                        </div>
-                        <form onSubmit={createCustomer}>
-                            <div className="modal-body">
-                                <div className="form-group"><label className="form-label">Full Name / Company Target</label><input className="form-input" value={cName} onChange={e => setCName(e.target.value)} required /></div>
-                                <div className="form-group"><label className="form-label">Phone Digit</label><input className="form-input" value={cPhone} onChange={e => setCPhone(e.target.value)} required /></div>
-                                <div className="form-group"><label className="form-label">Email Handle (Optional)</label><input className="form-input" value={cEmail} onChange={e => setCEmail(e.target.value)} /></div>
-                                <div className="form-group"><label className="form-label">Physical Location</label><input className="form-input" value={cLocation} onChange={e => setCLocation(e.target.value)} /></div>
-                            </div>
-                            <div className="modal-footer">
-                                <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>Cancel</button>
-                                <button type="submit" className="btn btn-primary" disabled={saving}>Save Profile</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            )}
+            {/* Registration Drawer */}
+            <ClientRegistrationDrawer
+                isOpen={showModal}
+                onClose={() => setShowModal(false)}
+                onSuccess={handleRegistrationSuccess}
+            />
 
-            {/* Vehicle Modal */}
+            {/* Simple Vehicle Add Modal (Keep for existing clients) */}
             {showVehicleModal && (
                 <div className="modal-overlay" onClick={() => setShowVehicleModal(false)}>
                     <div className="modal" onClick={e => e.stopPropagation()}>
                         <div className="modal-header">
                             <div>
-                                <h2>Register New Vehicle</h2>
-                                <p style={{ fontSize: 12, opacity: 0.6 }}>Assigning to: {selectedCustomer?.name}</p>
+                                <h2 style={{ fontSize: '1.2rem', fontWeight: 700 }}>Archive New Vehicle</h2>
+                                <p style={{ fontSize: 11, opacity: 0.6, marginTop: 4 }}>Assigning to: <span className="bold">{selectedCustomer?.name}</span></p>
                             </div>
                             <button className="btn btn-secondary btn-icon btn-sm" onClick={() => setShowVehicleModal(false)}><X size={16} /></button>
                         </div>
                         <form onSubmit={addVehicle}>
                             <div className="modal-body">
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-                                    <div className="form-group"><label className="form-label">Registration Plate</label><input className="form-input" value={vPlate} onChange={e => setVPlate(e.target.value)} required /></div>
-                                    <div className="form-group"><label className="form-label">Year</label><input className="form-input" type="number" value={vYear} onChange={e => setVYear(e.target.value)} required /></div>
-                                    <div className="form-group"><label className="form-label">Manufacturer (Make)</label><input className="form-input" value={vMake} onChange={e => setVMake(e.target.value)} required /></div>
-                                    <div className="form-group"><label className="form-label">Vehicle Model</label><input className="form-input" value={vModel} onChange={e => setVModel(e.target.value)} required /></div>
+                                    <div className="form-group"><label className="form-label">Plate Number</label><input className="form-input" value={vPlate} onChange={e => setVPlate(e.target.value)} required /></div>
+                                    <div className="form-group"><label className="form-label">Model Year</label><input className="form-input" type="number" value={vYear} onChange={e => setVYear(e.target.value)} required /></div>
+                                    <div className="form-group"><label className="form-label">Manufacturer</label><input className="form-input" value={vMake} onChange={e => setVMake(e.target.value)} required /></div>
+                                    <div className="form-group"><label className="form-label">Model Name</label><input className="form-input" value={vModel} onChange={e => setVModel(e.target.value)} required /></div>
+                                </div>
+                                <div className="form-group">
+                                    <label className="form-label">Previous Workshop</label>
+                                    <input className="form-input" value={vPrevWork} onChange={e => setVPrevWork(e.target.value)} />
+                                </div>
+                                <div className="form-group">
+                                    <label className="form-label">Vehicle History</label>
+                                    <textarea className="form-input" value={vHistory} onChange={e => setVHistory(e.target.value)} rows={2} />
+                                </div>
+                                <div className="form-group">
+                                    <label className="form-label">Initial Notes</label>
+                                    <textarea className="form-input" value={vNotes} onChange={e => setVNotes(e.target.value)} placeholder="e.g. Broken side mirror" rows={2} />
                                 </div>
                             </div>
                             <div className="modal-footer">
                                 <button type="button" className="btn btn-secondary" onClick={() => setShowVehicleModal(false)}>Dismiss</button>
-                                <button type="submit" className="btn btn-primary" disabled={saving}>Assign Vehicle</button>
+                                <button type="submit" className="btn btn-primary" disabled={saving}>Commit Update</button>
                             </div>
                         </form>
                     </div>

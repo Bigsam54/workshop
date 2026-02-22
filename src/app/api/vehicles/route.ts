@@ -8,7 +8,7 @@ export async function POST(req: NextRequest) {
     if (!user || user.role !== 'ADMIN') return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const body = await req.json()
-    const { customerId, plateNumber, make, model, year } = body
+    const { customerId, plateNumber, make, model, year, previousWork, history, notes } = body
 
     if (!customerId || !plateNumber || !make || !model || !year) {
         return NextResponse.json({ error: 'All fields required' }, { status: 400 })
@@ -16,7 +16,16 @@ export async function POST(req: NextRequest) {
 
     try {
         const vehicle = await prisma.vehicle.create({
-            data: { customerId: Number(customerId), plateNumber: plateNumber.toUpperCase(), make, model, year: Number(year) }
+            data: {
+                customerId: Number(customerId),
+                plateNumber: plateNumber.toUpperCase(),
+                make,
+                model,
+                year: Number(year),
+                previousWork,
+                history,
+                notes
+            }
         })
         return NextResponse.json(vehicle, { status: 201 })
     } catch {

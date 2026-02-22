@@ -105,21 +105,55 @@ export default function JobDetailPage({ params }: { params: Promise<{ id: string
             <main className="main-content">
                 <div className="page-content">
                     {/* Header Actions */}
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-                            <button className="btn btn-secondary btn-icon" onClick={() => router.back()}><ArrowLeft size={16} /></button>
+                    <div className="page-header" style={{
+                        marginBottom: 32,
+                        padding: '24px',
+                        background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(2, 6, 23, 0.8) 100%)',
+                        borderRadius: 20,
+                        border: '1px solid rgba(255, 255, 255, 0.05)',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        gap: 24,
+                        position: 'relative',
+                        overflow: 'hidden',
+                        boxShadow: '0 10px 30px -10px rgba(0,0,0,0.5)'
+                    }}>
+                        {/* Background Visual Anchors */}
+                        <div style={{
+                            position: 'absolute', top: 0, right: 0, bottom: 0, width: '40%',
+                            display: 'flex', gap: 0, zIndex: 0, opacity: 0.35
+                        }}>
+                            <div style={{ flex: 1, backgroundImage: 'url(/dashboard1.png)', backgroundSize: 'cover', backgroundPosition: 'center' }} />
+                            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(90deg, #0f172a 0%, transparent 100%)' }} />
+                        </div>
+
+                        <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: 20 }}>
+                            <button className="btn btn-secondary btn-icon" style={{
+                                width: 44, height: 44, borderRadius: 12, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)'
+                            }} onClick={() => router.back()}><ArrowLeft size={18} /></button>
                             <div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                                    <h1 style={{ margin: 0 }}>{job.jobCode}</h1>
+                                    <h1 style={{ margin: 0, fontSize: '1.75rem', fontWeight: 900, letterSpacing: '-0.02em' }}>{job.jobCode}</h1>
                                     <StatusBadge status={job.status} />
                                     <PriorityBadge priority={job.priority} />
                                 </div>
-                                <div style={{ opacity: 0.6, fontSize: 13, marginTop: 4 }}>{job.vehicle.make} {job.vehicle.model} ({job.vehicle.plateNumber}) · {job.customer.name}</div>
+                                <div style={{ opacity: 0.6, fontSize: 13, marginTop: 4, fontWeight: 500 }}>
+                                    {job.vehicle.make} {job.vehicle.model} ({job.vehicle.plateNumber}) · <span style={{ color: '#fbbf24' }}>{job.customer.name}</span>
+                                </div>
                             </div>
                         </div>
-                        <div style={{ display: 'flex', gap: 12 }}>
-                            <button className="btn btn-primary" onClick={saveDetails} disabled={saving}><Save size={16} /> Save Changes</button>
-                            {job.status === 'PAID' && <button className="btn btn-secondary" onClick={() => window.open(`/jobs/${id}/print?type=receipt`)}><Printer size={16} /> Receipt</button>}
+
+                        <div style={{ position: 'relative', zIndex: 1, display: 'flex', gap: 12 }}>
+                            <button className="btn btn-primary" style={{ padding: '0 24px', height: 48, borderRadius: 12 }} onClick={saveDetails} disabled={saving}><Save size={18} style={{ marginRight: 8 }} /> SAVE UPDATES</button>
+                            {job.status === 'PAID' && (
+                                <button className="btn btn-secondary" style={{
+                                    padding: '0 20px', height: 48, borderRadius: 12, display: 'flex', alignItems: 'center', gap: 8,
+                                    background: 'var(--status-completed)', color: '#fff', border: 'none', fontWeight: 700
+                                }} onClick={() => window.open(`/jobs/${id}/print?type=receipt`)}>
+                                    <Printer size={18} /> PRINT RECEIPT
+                                </button>
+                            )}
                         </div>
                     </div>
 
@@ -132,11 +166,11 @@ export default function JobDetailPage({ params }: { params: Promise<{ id: string
                                 <div className="card-body">
                                     <div className="form-group">
                                         <label className="form-label">Diagnosis Findings</label>
-                                        <textarea className="form-textarea" value={diagnosis} onChange={e => setDiagnosis(e.target.value)} />
+                                        <textarea className="form-textarea" value={diagnosis} onChange={e => setDiagnosis(e.target.value)} placeholder="Describe what was found during inspection (e.g., Scan code P0304 - Misfire detected)." />
                                     </div>
                                     <div className="form-group">
                                         <label className="form-label">Work Performed</label>
-                                        <textarea className="form-textarea" value={workDone} onChange={e => setWorkDone(e.target.value)} />
+                                        <textarea className="form-textarea" value={workDone} onChange={e => setWorkDone(e.target.value)} placeholder="Detail the repairs completed (e.g., Replaced spark plugs and cleared codes)." />
                                     </div>
                                     <div style={{ maxWidth: 200 }}>
                                         <label className="form-label">Labor Charges (GH₵)</label>

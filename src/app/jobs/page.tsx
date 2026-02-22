@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useState, useCallback } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/context/AuthContext'
 import { AppSidebar } from '@/components/AppSidebar'
@@ -21,9 +21,15 @@ interface Job {
 export default function JobsPage() {
     const { user, loading } = useAuth()
     const router = useRouter()
+    const searchParams = useSearchParams()
+
+    // Initial Filter Setup from URL
+    const initialStatus = searchParams.get('status') || 'ALL'
+    const initialFilter = searchParams.get('filter')
+
     const [jobs, setJobs] = useState<Job[]>([])
     const [fetching, setFetching] = useState(true)
-    const [statusFilter, setStatusFilter] = useState('ALL')
+    const [statusFilter, setStatusFilter] = useState(initialStatus)
     const [search, setSearch] = useState('')
 
     const fetchJobs = useCallback(() => {
@@ -34,13 +40,21 @@ export default function JobsPage() {
     useEffect(() => { if (!loading && !user) router.replace('/login') }, [user, loading, router])
     useEffect(() => { if (user) { setFetching(true); fetchJobs() } }, [user, fetchJobs])
 
-    const filtered = jobs.filter(j =>
-        search ? (
+    const filtered = jobs.filter(j => {
+        const matchesSearch = search ? (
             j.jobCode.toLowerCase().includes(search.toLowerCase()) ||
             j.customer.name.toLowerCase().includes(search.toLowerCase()) ||
             j.vehicle.plateNumber.toLowerCase().includes(search.toLowerCase())
-        ) : true
-    )
+        ) : true;
+
+        if (initialFilter === 'today') {
+            const today = formatDate(new Date().toISOString());
+            const jobDate = formatDate(j.createdAt);
+            return matchesSearch && jobDate === today;
+        }
+
+        return matchesSearch;
+    })
 
     return (
         <div className="app-layout">
@@ -63,7 +77,7 @@ export default function JobsPage() {
                                 className="form-input"
                                 style={{ paddingLeft: 44, background: 'var(--bg-app)', border: 'none' }}
                                 placeholder="Search by job ID, plate number, or customer name..."
-                                value={search} onChange={e => setSearch(search = e.target.value)}
+                                value={search} onChange={e => setSearch(e.target.value)}
                             />
                         </div>
 

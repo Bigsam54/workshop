@@ -59,39 +59,95 @@ export default function DashboardPage() {
             <AppSidebar />
             <main className="main-content">
                 <div className="page-content">
-                    <div className="page-header" style={{ marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                        <div>
-                            <h1 style={{ margin: 0 }}>Dashboard</h1>
-                            <p style={{ margin: '4px 0 0', opacity: 0.7 }}>Full workshop performance overview</p>
+                    <div className="page-header" style={{
+                        marginBottom: 32,
+                        height: 200,
+                        backgroundImage: 'url(/dashboard1.png)',
+                        backgroundSize: 'cover',
+                        backgroundPosition: 'center',
+                        borderRadius: 24,
+                        border: '1px solid rgba(255, 255, 255, 0.1)',
+                        display: 'flex',
+                        justifyContent: 'flex-end',
+                        alignItems: 'flex-start',
+                        padding: '24px',
+                        position: 'relative',
+                        overflow: 'hidden',
+                        boxShadow: '0 10px 40px -10px rgba(0,0,0,0.6)'
+                    }}>
+                        <div style={{ position: 'relative', zIndex: 2 }}>
+                            <Link href="/jobs/new" className="btn btn-primary" style={{
+                                padding: '14px 28px', borderRadius: 14, fontWeight: 800,
+                                background: 'linear-gradient(135deg, var(--primary), var(--primary-dark))',
+                                border: 'none', boxShadow: '0 4px 15px rgba(99, 102, 241, 0.4)',
+                                letterSpacing: '0.05em'
+                            }}>
+                                <Plus size={20} style={{ marginRight: 10 }} /> NEW WORK ORDER
+                            </Link>
                         </div>
-                        <Link href="/jobs" className="btn btn-primary"><Plus size={16} /> New Job Card</Link>
                     </div>
 
-                    {/* KPI Cards */}
-                    <div className="stats-grid">
-                        <div className="stat-card" style={{ '--accent': 'var(--primary)' } as React.CSSProperties}>
-                            <div className="stat-card-icon"><Briefcase size={20} /></div>
-                            <div className="stat-card-label">Jobs Today</div>
-                            <div className="stat-card-value">{kpis?.jobsToday ?? 0}</div>
-                            <div className="stat-card-sub">New registrations today</div>
+                    {/* KPI Cards: Consolidated to one line and interactive */}
+                    <div className="stats-grid" style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(4, 1fr)',
+                        gap: 20,
+                        marginBottom: 32
+                    }}>
+                        <div
+                            className="card stat-card"
+                            style={{ padding: '20px', cursor: 'pointer', transition: 'transform 0.2s', border: '1px solid rgba(255,255,255,0.05)' }}
+                            onClick={() => router.push('/jobs?filter=today')}
+                            onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-4px)'}
+                            onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
+                        >
+                            <div className="stat-icon" style={{ background: 'rgba(99, 102, 241, 0.1)', color: 'var(--primary-light)' }}><Briefcase size={20} /></div>
+                            <div className="stat-label" style={{ fontSize: 13, fontWeight: 500, opacity: 0.7 }}>Jobs Today</div>
+                            <div className="stat-value" style={{ fontSize: '1.75rem', fontWeight: 900 }}>{kpis?.jobsToday ?? 0}</div>
+                            <div className="stat-meta" style={{ fontSize: 11, opacity: 0.5 }}>New registrations today</div>
                         </div>
-                        <div className="stat-card" style={{ '--accent': 'var(--status-progress)' } as React.CSSProperties}>
-                            <div className="stat-card-icon"><Clock size={20} /></div>
-                            <div className="stat-card-label">Open Jobs</div>
-                            <div className="stat-card-value">{kpis?.openJobs ?? 0}</div>
-                            <div className="stat-card-sub">Active in workshop</div>
+                        <div
+                            className="card stat-card"
+                            style={{ padding: '20px', cursor: 'pointer', transition: 'transform 0.2s', border: '1px solid rgba(255,255,255,0.05)' }}
+                            onClick={() => router.push('/jobs?status=IN_PROGRESS')}
+                            onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-4px)'}
+                            onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
+                        >
+                            <div className="stat-icon" style={{ background: 'rgba(245, 158, 11, 0.1)', color: 'var(--secondary)' }}><Clock size={20} /></div>
+                            <div className="stat-label" style={{ fontSize: 13, fontWeight: 500, opacity: 0.7 }}>Open Jobs</div>
+                            <div className="stat-value" style={{ fontSize: '1.75rem', fontWeight: 900 }}>{kpis?.openJobs ?? 0}</div>
+                            <div className="stat-meta" style={{ fontSize: 11, opacity: 0.5 }}>Active in workshop</div>
                         </div>
-                        <div className="stat-card" style={{ '--accent': 'var(--status-completed)' } as React.CSSProperties}>
-                            <div className="stat-card-icon"><CheckCircle size={20} /></div>
-                            <div className="stat-card-label">Completed Weekly</div>
-                            <div className="stat-card-value">{kpis?.completedThisWeek ?? 0}</div>
-                            <div className="stat-card-sub">Ready for pickup</div>
+                        <div
+                            className="card stat-card"
+                            style={{ padding: '20px', cursor: 'pointer', transition: 'transform 0.2s', border: '1px solid rgba(255,255,255,0.05)' }}
+                            onClick={() => router.push('/jobs?status=COMPLETED')}
+                            onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-4px)'}
+                            onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
+                        >
+                            <div className="stat-icon" style={{ background: 'rgba(16, 185, 129, 0.1)', color: 'var(--status-completed)' }}><CheckCircle size={20} /></div>
+                            <div className="stat-label" style={{ fontSize: 13, fontWeight: 500, opacity: 0.7 }}>Completed Weekly</div>
+                            <div className="stat-value" style={{ fontSize: '1.75rem', fontWeight: 900 }}>{kpis?.completedThisWeek ?? 0}</div>
+                            <div className="stat-meta" style={{ fontSize: 11, opacity: 0.5 }}>Ready for pickup</div>
                         </div>
-                        <div className="stat-card" style={{ '--accent': 'var(--status-paid)' } as React.CSSProperties}>
-                            <div className="stat-card-icon"><TrendingUp size={20} /></div>
-                            <div className="stat-card-label">Revenue Monthly</div>
-                            <div className="stat-card-value">{formatCurrency(kpis?.revenueThisMonth ?? 0)}</div>
-                            <div className="stat-card-sub">Total payments received</div>
+                        <div
+                            className="card stat-card"
+                            style={{
+                                padding: '20px',
+                                border: '1px solid rgba(251, 191, 36, 0.2)',
+                                cursor: 'pointer',
+                                transition: 'transform 0.2s'
+                            }}
+                            onClick={() => router.push('/reports')}
+                            onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-4px)'}
+                            onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
+                        >
+                            <div style={{ position: 'relative', zIndex: 1 }}>
+                                <div className="stat-icon" style={{ background: 'rgba(251, 191, 36, 0.1)', color: '#fbbf24' }}><TrendingUp size={20} /></div>
+                                <div className="stat-label" style={{ fontSize: 13, fontWeight: 500, opacity: 0.7 }}>Revenue Monthly</div>
+                                <div className="stat-value" style={{ fontSize: '1.75rem', fontWeight: 900, color: '#fbbf24' }}>{formatCurrency(kpis?.revenueThisMonth ?? 0)}</div>
+                                <div className="stat-meta" style={{ fontSize: 11, opacity: 0.5 }}>Total payments received</div>
+                            </div>
                         </div>
                     </div>
 

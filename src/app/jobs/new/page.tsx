@@ -4,7 +4,8 @@ import { useRouter } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
 import { useToast } from '@/components/Toast'
 import { AppSidebar } from '@/components/AppSidebar'
-import { ArrowLeft } from 'lucide-react'
+import { ArrowLeft, UserPlus } from 'lucide-react'
+import { ClientRegistrationDrawer } from '@/components/ClientRegistrationDrawer'
 
 interface Customer { id: number; name: string; phone: string }
 interface Vehicle { id: number; plateNumber: string; make: string; model: string; year: number; customerId: number }
@@ -23,6 +24,7 @@ export default function NewJobPage() {
     const [complaint, setComplaint] = useState('')
     const [priority, setPriority] = useState('MEDIUM')
     const [saving, setSaving] = useState(false)
+    const [showRegisterDrawer, setShowRegisterDrawer] = useState(false)
 
     useEffect(() => {
         if (!loading && (!user || user.role !== 'ADMIN')) router.replace('/jobs')
@@ -43,9 +45,28 @@ export default function NewJobPage() {
         if (!customerId) { setVehicles([]); setVehicleId(''); return }
         fetch(`/api/customers/${customerId}`).then(r => r.json()).then(data => {
             setVehicles(data.vehicles || [])
-            setVehicleId('')
+            // If the customer has only one vehicle, select it automatically
+            if (data.vehicles?.length === 1) {
+                setVehicleId(data.vehicles[0].id.toString())
+            } else {
+                setVehicleId('')
+            }
         })
     }, [customerId])
+
+    const fetchCustomers = () => {
+        fetch('/api/customers').then(r => r.json()).then(custs => {
+            setCustomers(custs)
+        })
+    }
+
+    const handleRegistrationSuccess = (newCustomer: any) => {
+        // Refresh customer list
+        fetchCustomers()
+        // Select the new customer
+        setCustomerId(newCustomer.id.toString())
+        toast('New client registered and selected', 'success')
+    }
 
     const handleSubmit = async (e: FormEvent) => {
         e.preventDefault()
@@ -84,7 +105,17 @@ export default function NewJobPage() {
                         <div className="card-body">
                             <form onSubmit={handleSubmit}>
                                 <div className="form-group">
-                                    <label className="form-label">Customer *</label>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+                                        <label className="form-label" style={{ marginBottom: 0 }}>Customer *</label>
+                                        <button
+                                            type="button"
+                                            className="btn btn-secondary btn-xs"
+                                            style={{ height: 24, padding: '0 8px', fontSize: 11 }}
+                                            onClick={() => setShowRegisterDrawer(true)}
+                                        >
+                                            <UserPlus size={12} style={{ marginRight: 4 }} /> Register Client
+                                        </button>
+                                    </div>
                                     <select className="form-select" value={customerId} onChange={e => setCustomerId(e.target.value)} required>
                                         <option value="">Select customer...</option>
                                         {customers.map(c => <option key={c.id} value={c.id}>{c.name} — {c.phone}</option>)}
@@ -132,6 +163,12 @@ export default function NewJobPage() {
                     </div>
                 </div>
             </main>
+
+            <ClientRegistrationDrawer
+                isOpen={showRegisterDrawer}
+                onClose={() => setShowRegisterDrawer(false)}
+                onSuccess={handleRegistrationSuccess}
+            />
         </div>
     )
 }

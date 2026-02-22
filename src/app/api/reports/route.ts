@@ -7,15 +7,33 @@ export async function GET(req: NextRequest) {
     const user = await getAuthUser(req)
     if (!user || user.role !== 'ADMIN') return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    const now = new Date()
-    const last30Days = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+    const month = req.nextUrl.searchParams.get('month')
+    const year = req.nextUrl.searchParams.get('year')
+    const day = req.nextUrl.searchParams.get('day')
+
+    let dateQuery: any = {}
+    if (month && year) {
+        let start, end;
+        if (day && day !== 'ALL') {
+            start = new Date(Number(year), Number(month) - 1, Number(day))
+            end = new Date(Number(year), Number(month) - 1, Number(day), 23, 59, 59)
+        } else {
+            start = new Date(Number(year), Number(month) - 1, 1)
+            end = new Date(Number(year), Number(month), 0, 23, 59, 59)
+        }
+        dateQuery = { gte: start, lte: end }
+    } else {
+        const now = new Date()
+        const start = new Date(now.getFullYear(), now.getMonth(), 1)
+        dateQuery = { gte: start }
+    }
 
     const [revenueByMonth, jobsByStatus, topParts, techPerformance] = await Promise.all([
-        // Revenue by month (last 6 payments)
+        // Revenue for the selected period
         prisma.payment.findMany({
-            where: { status: 'PAID', paidAt: { gte: last30Days } },
-            select: { amount: true, paidAt: true, method: true },
-            orderBy: { paidAt: 'asc' },
+            where: { status: 'PAID', paidAt: dateQuery },
+            select: { amount: true, paidAt: true, method: true, job: { select: { jobCode: true, customer: { select: { name: true } } } } },
+            orderBy: { paidAt: 'desc' },
         }),
         // Jobs by status
         prisma.jobCard.groupBy({
