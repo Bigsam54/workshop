@@ -52,6 +52,19 @@ export async function POST(req: NextRequest) {
     if (!name || !phone) return NextResponse.json({ error: 'Name and phone required' }, { status: 400 })
 
     try {
+        // 1. Check if phone already exists
+        const existingCustomer = await prisma.customer.findUnique({ where: { phone } })
+        if (existingCustomer) return NextResponse.json({ error: `Phone number ${phone} is already registered to ${existingCustomer.name}` }, { status: 409 })
+
+        // 2. Check if vehicle plate already exists
+        if (vehicle?.plateNumber) {
+            const existingVehicle = await prisma.vehicle.findUnique({
+                where: { plateNumber: vehicle.plateNumber },
+                include: { customer: true }
+            })
+            if (existingVehicle) return NextResponse.json({ error: `Plate ${vehicle.plateNumber} is already assigned to ${existingVehicle.customer.name}` }, { status: 409 })
+        }
+
         const customer = await prisma.customer.create({
             data: {
                 name,
@@ -63,17 +76,22 @@ export async function POST(req: NextRequest) {
                         plateNumber: vehicle.plateNumber,
                         make: vehicle.make,
                         model: vehicle.model,
-                        year: Number(vehicle.year),
+                        year: isNaN(Number(vehicle.year)) ? new Date().getFullYear() : Number(vehicle.year),
                         previousWork: vehicle.previousWork,
                         history: vehicle.history,
                         notes: vehicle.notes
                     }
                 } : undefined
-            },
+            } as any,
             include: { vehicles: true }
         })
         return NextResponse.json(customer, { status: 201 })
-    } catch {
-        return NextResponse.json({ error: 'Phone already exists or vehicle plate error' }, { status: 409 })
+    } catch (err: any) {
+        console.error('Registration Error:', err)
+        return NextResponse.json({
+            error: `Master Terminal Error: ${err.message || 'System Failure'}`,
+            details: err.message,
+            stack: err.stack
+        }, { status: 500 })
     }
 }
