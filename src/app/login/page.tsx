@@ -72,21 +72,8 @@ export default function LoginPage() {
                     }} />
                 ))}
 
-                {/* Visual Adinkra Watermark (Gye Nyame inspired texture) */}
-                <div style={{
-                    position: 'absolute', top: '-10%', right: '-10%',
-                    fontSize: '40rem', opacity: 0.03, color: 'var(--primary-light)',
-                    userSelect: 'none', pointerEvents: 'none', fontWeight: 900,
-                    zIndex: 1
-                }}>⚙️</div>
 
                 <div style={{ position: 'relative', zIndex: 2, maxWidth: 480 }}>
-                    <div style={{
-                        width: 64, height: 64, borderRadius: 16,
-                        background: 'linear-gradient(135deg, #fbbf24, #d97706)',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: 28, marginBottom: 32, boxShadow: '0 10px 30px rgba(217, 119, 6, 0.3)'
-                    }}>⚙️</div>
 
                     <h1 style={{
                         fontSize: '3.5rem', fontWeight: 900, letterSpacing: '-0.04em',
@@ -137,7 +124,7 @@ export default function LoginPage() {
                             background: 'var(--primary)', display: 'flex',
                             alignItems: 'center', justifyContent: 'center', fontSize: 24,
                             marginBottom: 16
-                        }}>⚙️</div>
+                        }}>⭐</div>
                         <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: 'var(--text-main)' }}>WorkshopPulse</h2>
                     </div>
 
