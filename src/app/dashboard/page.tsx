@@ -151,7 +151,7 @@ export default function DashboardPage() {
                         </div>
                     </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: 24 }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 240px', gap: 24 }}>
                         {/* Recent Jobs */}
                         <div className="card">
                             <div className="card-header">
@@ -162,18 +162,25 @@ export default function DashboardPage() {
                                 <div className="card-body" style={{ textAlign: 'center', padding: '60px 0', opacity: 0.5 }}>No active job cards found</div>
                             ) : (
                                 <div className="table-wrapper">
-                                    <table>
+                                    <table style={{ borderSpacing: 0, width: '100%' }}>
                                         <thead><tr>
-                                            <th>Code</th><th>Customer</th><th>Vehicle</th><th>Status</th><th>Date</th>
+                                            <th style={{ padding: '12px 16px', whiteSpace: 'nowrap' }}>Code</th>
+                                            <th style={{ padding: '12px 16px' }}>Customer</th>
+                                            <th style={{ padding: '12px 16px' }}>Vehicle</th>
+                                            <th style={{ padding: '12px 16px', whiteSpace: 'nowrap' }}>Status</th>
+                                            <th style={{ padding: '12px 16px', whiteSpace: 'nowrap' }}>Date</th>
                                         </tr></thead>
                                         <tbody>
                                             {recentJobs.map(job => (
                                                 <tr key={job.id} style={{ cursor: 'pointer' }} onClick={() => router.push(`/jobs/${job.id}`)}>
-                                                    <td><span className="bold">{job.jobCode}</span></td>
-                                                    <td>{job.customer.name}</td>
-                                                    <td>{job.vehicle.plateNumber} <div style={{ fontSize: 11, opacity: 0.6 }}>{job.vehicle.make} {job.vehicle.model}</div></td>
-                                                    <td><StatusBadge status={job.status} /></td>
-                                                    <td style={{ fontSize: 12 }}>{formatDate(job.createdAt)}</td>
+                                                    <td style={{ padding: '12px 16px', whiteSpace: 'nowrap' }}><span className="bold">{job.jobCode}</span></td>
+                                                    <td style={{ padding: '12px 16px' }}>{job.customer.name}</td>
+                                                    <td style={{ padding: '12px 16px', whiteSpace: 'nowrap' }}>
+                                                        <div className="bold" style={{ fontSize: 13 }}>{job.vehicle.plateNumber}</div>
+                                                        <div style={{ fontSize: 11, opacity: 0.6 }}>{job.vehicle.make} {job.vehicle.model}</div>
+                                                    </td>
+                                                    <td style={{ padding: '12px 16px', whiteSpace: 'nowrap' }}><StatusBadge status={job.status} /></td>
+                                                    <td style={{ padding: '12px 16px', whiteSpace: 'nowrap', fontSize: 12 }}>{formatDate(job.createdAt)}</td>
                                                 </tr>
                                             ))}
                                         </tbody>

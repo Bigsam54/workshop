@@ -27,9 +27,12 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         })
     }
 
-    // Update job status to PAID + log
-    await prisma.jobCard.update({ where: { id: jobId }, data: { status: 'PAID' } })
-    await prisma.jobStatusLog.create({ data: { jobId, status: 'PAID', changedBy: user.userId } })
+    // Update job status to COMPLETED + set completedAt + log
+    await prisma.jobCard.update({
+        where: { id: jobId },
+        data: { status: 'COMPLETED', completedAt: new Date() }
+    })
+    await prisma.jobStatusLog.create({ data: { jobId, status: 'COMPLETED', changedBy: user.userId } })
 
     return NextResponse.json(payment, { status: 201 })
 }

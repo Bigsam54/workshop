@@ -17,12 +17,12 @@ async function main() {
   await prisma.part.deleteMany()
   await prisma.user.deleteMany()
 
-  const hash = await bcrypt.hash('admin123', 10)
+  const hash = await bcrypt.hash('Ps 123456789', 10)
   const techHash = await bcrypt.hash('tech123', 10)
 
   // ─── USERS ───────────────────────────────────────────────────
   const admin = await prisma.user.create({
-    data: { name: 'Super Admin', username: 'Workshop', role: 'ADMIN' as any, passwordHash: hash } as any
+    data: { name: 'Super Admin', username: 'Project work', role: 'ADMIN' as any, passwordHash: hash } as any
   })
   const tech1 = await prisma.user.create({
     data: { name: 'Kwadwo Mechanic', username: 'Kwadwo', role: 'TECH' as any, passwordHash: techHash } as any
@@ -218,7 +218,7 @@ async function main() {
   })
 
   console.log('✅ Job Cards restored with varied statuses and Payments')
-  console.log('Seeding complete! Admin: 0201000001, Tech 1-4: 0201000002, 03, 05, 06')
+  console.log('Seeding complete! Admin: Project work, Password: Ps 123456789')
 }
 
 main()
