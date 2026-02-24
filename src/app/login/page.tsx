@@ -3,7 +3,7 @@ import { useState, FormEvent, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
 import { useToast } from '@/components/Toast'
-import { Lock, Phone, ArrowRight } from 'lucide-react'
+import { Lock, Phone, ArrowRight, Eye, EyeOff } from 'lucide-react'
 
 export default function LoginPage() {
     const { login, user } = useAuth()
@@ -11,6 +11,7 @@ export default function LoginPage() {
     const router = useRouter()
     const [username, setUsername] = useState('')
     const [password, setPassword] = useState('')
+    const [showPassword, setShowPassword] = useState(false)
     const [loading, setLoading] = useState(false)
     const [bgIndex, setBgIndex] = useState(0)
 
@@ -156,13 +157,34 @@ export default function LoginPage() {
                                 <Lock size={18} style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', opacity: 0.4 }} />
                                 <input
                                     className="form-input"
-                                    style={{ paddingLeft: 48, height: 56, borderRadius: 12, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', fontSize: '1.1rem' }}
-                                    type="password"
+                                    style={{ paddingLeft: 48, paddingRight: 48, height: 56, borderRadius: 12, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', fontSize: '1.1rem' }}
+                                    type={showPassword ? "text" : "password"}
                                     placeholder="••••••••"
                                     value={password}
                                     onChange={e => setPassword(e.target.value)}
                                     required
                                 />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    style={{
+                                        position: 'absolute',
+                                        right: 16,
+                                        top: '50%',
+                                        transform: 'translateY(-50%)',
+                                        background: 'none',
+                                        border: 'none',
+                                        color: 'white',
+                                        opacity: 0.4,
+                                        cursor: 'pointer',
+                                        padding: 0,
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center'
+                                    }}
+                                >
+                                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                                </button>
                             </div>
                         </div>
 
