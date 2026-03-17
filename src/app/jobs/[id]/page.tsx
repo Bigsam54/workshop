@@ -11,8 +11,9 @@ interface JobDetail {
     id: number; jobCode: string; status: string; priority: string
     complaint: string; diagnosis: string | null; workDone: string | null; laborCost: number
     createdAt: string; updatedAt: string; completedAt: string | null
-    customer: { id: number; name: string; phone: string }
-    vehicle: { plateNumber: string; make: string; model: string; year: number }
+    receptionist: string | null; paymentType: string | null; promisedDelivery: string | null
+    customer: { id: number; name: string; phone: string; location: string | null }
+    vehicle: { plateNumber: string; make: string; model: string; year: number; mileage: string | null; chassisNo: string | null; engineNo: string | null }
     technician?: { id: number; name: string }
     statusLogs: Array<{ id: number; status: string; timestamp: string; user: { name: string } }>
     jobParts: Array<{ id: number; qty: number; unitPrice: number; part: { id: number; name: string; sku: string } }>
@@ -146,6 +147,12 @@ export default function JobDetailPage({ params }: { params: Promise<{ id: string
 
                         <div style={{ position: 'relative', zIndex: 1, display: 'flex', gap: 12 }}>
                             <button className="btn btn-primary" style={{ padding: '0 24px', height: 48, borderRadius: 12 }} onClick={saveDetails} disabled={saving}><Save size={18} style={{ marginRight: 8 }} /> SAVE UPDATES</button>
+                            <button className="btn btn-secondary" style={{
+                                padding: '0 20px', height: 48, borderRadius: 12, display: 'flex', alignItems: 'center', gap: 8,
+                                background: 'rgba(99,102,241,0.15)', color: '#a5b4fc', border: '1px solid rgba(99,102,241,0.4)', fontWeight: 700
+                            }} onClick={() => window.open(`/jobs/${id}/print?type=invoice`)}>
+                                <Printer size={18} /> PRINT JOB CARD
+                            </button>
                             {job.status === 'PAID' && (
                                 <button className="btn btn-secondary" style={{
                                     padding: '0 20px', height: 48, borderRadius: 12, display: 'flex', alignItems: 'center', gap: 8,
@@ -157,7 +164,29 @@ export default function JobDetailPage({ params }: { params: Promise<{ id: string
                         </div>
                     </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: 24 }}>
+                    {/* INTAKE SUMMARY BAR */}
+                    <div style={{ position: 'relative', zIndex: 1, display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 24 }}>
+                        <div className="card" style={{ padding: 16, background: 'rgba(99, 102, 241, 0.05)', border: '1px solid rgba(99, 102, 241, 0.1)', borderRadius: 16 }}>
+                            <div style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.1em', opacity: 0.5, marginBottom: 4, color: 'var(--primary-light)', fontWeight: 800 }}>Receptionist</div>
+                            <div style={{ fontWeight: 700, fontSize: 13 }}>{job.receptionist || 'System'}</div>
+                        </div>
+                        <div className="card" style={{ padding: 16, background: 'rgba(99, 102, 241, 0.05)', border: '1px solid rgba(99, 102, 241, 0.1)', borderRadius: 16 }}>
+                            <div style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.1em', opacity: 0.5, marginBottom: 4, color: 'var(--primary-light)', fontWeight: 800 }}>Odometer (at start)</div>
+                            <div style={{ fontWeight: 700, fontSize: 13 }}>{job.vehicle.mileage ? `${job.vehicle.mileage} km` : 'Not recorded'}</div>
+                        </div>
+                        <div className="card" style={{ padding: 16, background: 'rgba(99, 102, 241, 0.05)', border: '1px solid rgba(99, 102, 241, 0.1)', borderRadius: 16 }}>
+                            <div style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.1em', opacity: 0.5, marginBottom: 4, color: 'var(--primary-light)', fontWeight: 800 }}>Service Type</div>
+                            <div style={{ fontWeight: 700, fontSize: 13 }}>{job.paymentType || 'CASH'}</div>
+                        </div>
+                        <div className="card" style={{ padding: 16, background: 'rgba(99, 102, 241, 0.05)', border: '1px solid rgba(99, 102, 241, 0.1)', borderRadius: 16 }}>
+                            <div style={{ fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.1em', opacity: 0.5, marginBottom: 4, color: 'var(--primary-light)', fontWeight: 800 }}>Promised Delivery</div>
+                            <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--primary-light)' }}>
+                                {job.promisedDelivery ? formatDateTime(job.promisedDelivery) : 'ASAP'}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style={{ position: 'relative', zIndex: 1, display: 'grid', gridTemplateColumns: '1fr 360px', gap: 24 }}>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
 
                             {/* Diagnosis & Repair */}

@@ -43,11 +43,34 @@ export async function POST(req: NextRequest) {
     if (!user || user.role !== 'ADMIN') return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
     const body = await req.json()
-    const { customerId, vehicleId, assignedTo, complaint, priority } = body
+    const { 
+        customerId, 
+        vehicleId, 
+        assignedTo, 
+        complaint, 
+        priority,
+        repairInstruction,
+        promisedDelivery,
+        paymentType,
+        receptionist,
+        mileage,
+        chassisNo,
+        engineNo
+    } = body
 
     if (!customerId || !vehicleId || !complaint) {
         return NextResponse.json({ error: 'Required fields missing' }, { status: 400 })
     }
+
+    // Update vehicle info (mileage/chassis/engine can be captured per visit)
+    await prisma.vehicle.update({
+        where: { id: Number(vehicleId) },
+        data: {
+            mileage: mileage || undefined,
+            chassisNo: chassisNo || undefined,
+            engineNo: engineNo || undefined
+        }
+    })
 
     let jobCode = generateJobCode()
     // ensure unique
@@ -64,6 +87,10 @@ export async function POST(req: NextRequest) {
             vehicleId: Number(vehicleId),
             assignedTo: assignedTo ? Number(assignedTo) : null,
             complaint,
+            repairInstruction: repairInstruction || null,
+            promisedDelivery: promisedDelivery || null,
+            paymentType: paymentType || 'CASH',
+            receptionist: receptionist || null,
             priority: priority || 'MEDIUM',
             status: 'NEW',
         },
