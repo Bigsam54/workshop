@@ -7,11 +7,12 @@ import { useToast } from '@/components/Toast'
 import { AppSidebar } from '@/components/AppSidebar'
 import { formatDate } from '@/components/ui'
 import { ClientRegistrationDrawer } from '@/components/ClientRegistrationDrawer'
+import { VehicleHealthModal } from '@/components/VehicleHealthModal'
 import { Plus, Search, X, Car, User, Mail, MapPin, TrendingUp } from 'lucide-react'
 
 interface Customer {
     id: number; name: string; phone: string; email: string | null; location: string | null; createdAt: string
-    vehicles: Array<{ plateNumber: string; make: string; model: string }>
+    vehicles: Array<{ id: number; plateNumber: string; make: string; model: string }>
     jobCards: Array<{
         id: number;
         status: string;
@@ -36,8 +37,12 @@ export default function CustomersPage() {
     const [vModel, setVModel] = useState(''); const [vYear, setVYear] = useState('')
     const [vPrevWork, setVPrevWork] = useState(''); const [vHistory, setVHistory] = useState('')
     const [vNotes, setVNotes] = useState('')
+    const [vLastServiceDate, setVLastServiceDate] = useState(''); const [vLastServiceMileage, setVLastServiceMileage] = useState('')
 
     const [saving, setSaving] = useState(false)
+
+    // Vehicle Health (predictive maintenance) modal
+    const [healthVehicleId, setHealthVehicleId] = useState<number | null>(null)
 
     const fetchCustomers = useCallback(() => {
         const q = search ? `?search=${encodeURIComponent(search)}` : ''
@@ -80,7 +85,9 @@ export default function CustomersPage() {
                 year: Number(vYear),
                 previousWork: vPrevWork,
                 history: vHistory,
-                notes: vNotes
+                notes: vNotes,
+                lastServiceDate: vLastServiceDate || null,
+                lastServiceMileage: vLastServiceMileage || null
             })
         })
         if (res.ok) {
@@ -88,6 +95,7 @@ export default function CustomersPage() {
             setShowVehicleModal(false);
             setVPlate(''); setVMake(''); setVModel(''); setVYear('')
             setVPrevWork(''); setVHistory(''); setVNotes('')
+            setVLastServiceDate(''); setVLastServiceMileage('')
             fetchCustomers()
         } else {
             const d = await res.json()
@@ -169,9 +177,15 @@ export default function CustomersPage() {
                                                         <td>
                                                             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                                                                 {c.vehicles.map((v, i) => (
-                                                                    <span key={i} className="badge" style={{ background: 'var(--bg-card)', color: 'var(--primary-light)', border: '1px dotted var(--primary)', fontSize: 10, padding: '2px 8px' }}>
+                                                                    <button
+                                                                        key={i}
+                                                                        className="badge"
+                                                                        onClick={() => setHealthVehicleId(v.id)}
+                                                                        title="View predictive maintenance"
+                                                                        style={{ background: 'var(--bg-card)', color: 'var(--primary-light)', border: '1px dotted var(--primary)', fontSize: 10, padding: '2px 8px', cursor: 'pointer' }}
+                                                                    >
                                                                         {v.plateNumber}
-                                                                    </span>
+                                                                    </button>
                                                                 ))}
                                                                 {c.vehicles.length === 0 && <span style={{ fontSize: 11, opacity: 0.3 }}>No fleet recorded</span>}
                                                             </div>
@@ -238,6 +252,10 @@ export default function CustomersPage() {
                                     <div className="form-group"><label className="form-label">Manufacturer</label><input className="form-input" value={vMake} onChange={e => setVMake(e.target.value)} required /></div>
                                     <div className="form-group"><label className="form-label">Model Name</label><input className="form-input" value={vModel} onChange={e => setVModel(e.target.value)} required /></div>
                                 </div>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                                    <div className="form-group"><label className="form-label">Last Service Date (Optional)</label><input className="form-input" type="date" value={vLastServiceDate} onChange={e => setVLastServiceDate(e.target.value)} /></div>
+                                    <div className="form-group"><label className="form-label">Mileage at Last Service (km)</label><input className="form-input" type="number" value={vLastServiceMileage} onChange={e => setVLastServiceMileage(e.target.value)} placeholder="e.g. 45000" /></div>
+                                </div>
                                 <div className="form-group">
                                     <label className="form-label">Previous Workshop</label>
                                     <input className="form-input" value={vPrevWork} onChange={e => setVPrevWork(e.target.value)} />
@@ -258,6 +276,11 @@ export default function CustomersPage() {
                         </form>
                     </div>
                 </div>
+            )}
+
+            {/* Vehicle Health / Predictive Maintenance Modal */}
+            {healthVehicleId && (
+                <VehicleHealthModal vehicleId={healthVehicleId} onClose={() => setHealthVehicleId(null)} onUpdated={fetchCustomers} />
             )}
         </div>
     )

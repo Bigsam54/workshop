@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { getAuthUser } from '@/lib/auth'
+import { computeMaintenanceStatus } from '@/lib/maintenance'
 
 // GET /api/dashboard — KPI stats for Admin Dashboard
 export async function GET(req: NextRequest) {
@@ -21,6 +22,7 @@ export async function GET(req: NextRequest) {
         recentJobs,
         jobsByStatus,
         lowStockParts,
+        vehicles,
     ] = await Promise.all([
         prisma.jobCard.count({ where: { createdAt: { gte: startOfDay } } }),
         prisma.jobCard.count({ where: { status: { notIn: ['COMPLETED', 'PAID'] } } }),
@@ -33,10 +35,24 @@ export async function GET(req: NextRequest) {
         }),
         prisma.jobCard.groupBy({ by: ['status'], _count: { id: true } }),
         prisma.part.findMany({ orderBy: { stockQty: 'asc' } }),
+        prisma.vehicle.findMany({ select: { mileage: true, lastServiceDate: true, lastServiceMileage: true } }),
     ])
 
     // Restore full revenue visibility for all authenticated users
     const revenueThisMonth = allPaidThisMonth.reduce((sum, p) => sum + p.amount, 0)
+
+    let overdueVehicles = 0
+    let dueSoonVehicles = 0
+    for (const v of vehicles) {
+        const currentMileage = v.mileage ? parseInt(v.mileage, 10) : null
+        const maintenance = computeMaintenanceStatus({
+            lastServiceDate: v.lastServiceDate,
+            lastServiceMileage: v.lastServiceMileage,
+            currentMileage: currentMileage != null && !isNaN(currentMileage) ? currentMileage : null,
+        })
+        if (maintenance.some(m => m.status === 'overdue')) overdueVehicles++
+        else if (maintenance.some(m => m.status === 'due_soon')) dueSoonVehicles++
+    }
 
     return NextResponse.json({
         kpis: {
@@ -48,5 +64,6 @@ export async function GET(req: NextRequest) {
         recentJobs,
         jobsByStatus,
         lowStockParts,
+        maintenanceAlerts: { overdueVehicles, dueSoonVehicles },
     })
 }

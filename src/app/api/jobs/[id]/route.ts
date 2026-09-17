@@ -64,6 +64,20 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 
     const updatedJob = await prisma.jobCard.update({ where: { id: jobId }, data: updateData })
 
+    // Completing a job is the moment a service was actually performed, so use it
+    // to anchor predictive maintenance: record the date and odometer reading.
+    if (status === 'COMPLETED' && current.status !== 'COMPLETED') {
+        const vehicle = await prisma.vehicle.findUnique({ where: { id: current.vehicleId } })
+        const mileageNum = vehicle?.mileage ? parseInt(vehicle.mileage, 10) : null
+        await prisma.vehicle.update({
+            where: { id: current.vehicleId },
+            data: {
+                lastServiceDate: new Date(),
+                lastServiceMileage: mileageNum != null && !isNaN(mileageNum) ? mileageNum : undefined,
+            },
+        })
+    }
+
     if (status && status !== current.status) {
         await prisma.jobStatusLog.create({
             data: { jobId, status, changedBy: user.userId },

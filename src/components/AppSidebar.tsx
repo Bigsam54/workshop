@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useAuth } from '@/context/AuthContext'
 import {
     LayoutDashboard, Briefcase, Users, Package, BarChart3,
-    LogOut, Menu, X, Wrench, ListTodo
+    LogOut, Menu, X, Wrench, ListTodo, ShieldAlert
 } from 'lucide-react'
 import { useState, ReactNode } from 'react'
 
@@ -20,6 +20,7 @@ const navItems: NavItem[] = [
     { href: '/jobs', label: 'Job Cards', icon: <Briefcase size={18} />, role: ['ADMIN', 'SECRETARY'] },
     { href: '/my-jobs', label: 'My Jobs', icon: <ListTodo size={18} />, role: ['TECH'] },
     { href: '/customers', label: 'Customers', icon: <Users size={18} />, role: ['ADMIN', 'SECRETARY'] },
+    { href: '/maintenance', label: 'Maintenance', icon: <ShieldAlert size={18} />, role: ['ADMIN', 'SECRETARY'] },
     { href: '/inventory', label: 'Inventory', icon: <Package size={18} />, role: ['ADMIN', 'SECRETARY'] },
     { href: '/reports', label: 'Reports', icon: <BarChart3 size={18} />, role: ['ADMIN'] },
 ]

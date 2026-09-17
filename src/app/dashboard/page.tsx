@@ -27,10 +27,15 @@ interface LowStockPart {
     id: number; name: string; stockQty: number; lowStockLevel: number
 }
 
+interface MaintenanceAlerts {
+    overdueVehicles: number
+    dueSoonVehicles: number
+}
+
 export default function DashboardPage() {
     const { user, loading } = useAuth()
     const router = useRouter()
-    const [data, setData] = useState<{ kpis: KPIs; recentJobs: JobCard[]; lowStockParts: LowStockPart[] } | null>(null)
+    const [data, setData] = useState<{ kpis: KPIs; recentJobs: JobCard[]; lowStockParts: LowStockPart[]; maintenanceAlerts: MaintenanceAlerts } | null>(null)
     const [fetching, setFetching] = useState(true)
 
     useEffect(() => {
@@ -53,6 +58,8 @@ export default function DashboardPage() {
     const kpis = data?.kpis
     const recentJobs = data?.recentJobs || []
     const lowStock = data?.lowStockParts || []
+    const maintenanceAlerts = data?.maintenanceAlerts
+    const maintenanceTotal = (maintenanceAlerts?.overdueVehicles ?? 0) + (maintenanceAlerts?.dueSoonVehicles ?? 0)
 
     return (
         <div className="app-layout">
@@ -151,6 +158,40 @@ export default function DashboardPage() {
                         </div>
                     </div>
 
+                    {maintenanceTotal > 0 && (
+                        <div
+                            className={`card ${maintenanceAlerts!.overdueVehicles > 0 ? 'maintenance-alert-pulse' : ''}`}
+                            onClick={() => router.push('/maintenance')}
+                            style={{
+                                marginBottom: 32,
+                                cursor: 'pointer',
+                                padding: '20px 24px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                gap: 20,
+                                background: 'rgba(220, 38, 38, 0.08)',
+                                border: '1px solid var(--priority-high)',
+                                borderLeftWidth: 6,
+                            }}
+                        >
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                                <div style={{ width: 44, height: 44, borderRadius: 12, background: 'rgba(220, 38, 38, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                    <AlertTriangle color="var(--priority-high)" size={22} />
+                                </div>
+                                <div>
+                                    <div className="bold" style={{ color: 'var(--priority-high)', fontSize: 15 }}>
+                                        {maintenanceTotal} vehicle{maintenanceTotal === 1 ? '' : 's'} need{maintenanceTotal === 1 ? 's' : ''} maintenance attention
+                                    </div>
+                                    <div style={{ fontSize: 12, opacity: 0.7, marginTop: 2 }}>
+                                        {maintenanceAlerts!.overdueVehicles} overdue (oil, filters, brake pads, etc.) &middot; {maintenanceAlerts!.dueSoonVehicles} due soon
+                                    </div>
+                                </div>
+                            </div>
+                            <span className="btn btn-secondary btn-sm" style={{ whiteSpace: 'nowrap' }}>View All &rarr;</span>
+                        </div>
+                    )}
+
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 240px', gap: 24 }}>
                         {/* Recent Jobs */}
                         <div className="card">
@@ -217,6 +258,16 @@ export default function DashboardPage() {
                     </div>
                 </div>
             </main>
+
+            <style jsx>{`
+                @keyframes maintenanceAlertPulse {
+                    0%, 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.45); }
+                    50% { box-shadow: 0 0 0 10px rgba(220, 38, 38, 0); }
+                }
+                :global(.maintenance-alert-pulse) {
+                    animation: maintenanceAlertPulse 2s ease-out infinite;
+                }
+            `}</style>
         </div>
     )
 }

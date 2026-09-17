@@ -31,21 +31,23 @@ model Customer {
 }
 
 model Vehicle {
-  id           Int       @id @default(autoincrement())
-  customerId   Int
-  plateNumber  String    @unique
-  make         String
-  model        String
-  year         Int
-  mileage      String?
-  chassisNo    String?
-  engineNo     String?
-  createdAt    DateTime  @default(now())
-  history      String?
-  notes        String?
-  previousWork String?
-  jobCards     JobCard[]
-  customer     Customer  @relation(fields: [customerId], references: [id])
+  id                 Int       @id @default(autoincrement())
+  customerId         Int
+  plateNumber        String    @unique
+  make               String
+  model              String
+  year               Int
+  mileage            String?
+  chassisNo          String?
+  engineNo           String?
+  createdAt          DateTime  @default(now())
+  history            String?
+  notes              String?
+  previousWork       String?
+  lastServiceDate    DateTime?
+  lastServiceMileage Int?
+  jobCards           JobCard[]
+  customer           Customer  @relation(fields: [customerId], references: [id])
 }
 
 model JobCard {
@@ -101,6 +103,8 @@ model InventoryMovement {
   partId        Int
   type          String
   qty           Int
+  previousQty   Int?
+  newQty        Int?
   note          String?
   createdBy     Int
   timestamp     DateTime @default(now())

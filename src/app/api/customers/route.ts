@@ -79,7 +79,9 @@ export async function POST(req: NextRequest) {
                         year: isNaN(Number(vehicle.year)) ? new Date().getFullYear() : Number(vehicle.year),
                         previousWork: vehicle.previousWork,
                         history: vehicle.history,
-                        notes: vehicle.notes
+                        notes: vehicle.notes,
+                        lastServiceDate: vehicle.lastServiceDate ? new Date(vehicle.lastServiceDate) : undefined,
+                        lastServiceMileage: vehicle.lastServiceMileage ? Number(vehicle.lastServiceMileage) : undefined,
                     }
                 } : undefined
             } as any,

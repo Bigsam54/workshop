@@ -23,6 +23,8 @@ export function ClientRegistrationDrawer({ isOpen, onClose, onSuccess }: ClientR
     const [vPrevWork, setVPrevWork] = useState('')
     const [vHistory, setVHistory] = useState('')
     const [vNotes, setVNotes] = useState('')
+    const [vLastServiceDate, setVLastServiceDate] = useState('')
+    const [vLastServiceMileage, setVLastServiceMileage] = useState('')
 
     const [saving, setSaving] = useState(false)
 
@@ -42,7 +44,9 @@ export function ClientRegistrationDrawer({ isOpen, onClose, onSuccess }: ClientR
                 year: vYear,
                 previousWork: vPrevWork,
                 history: vHistory,
-                notes: vNotes
+                notes: vNotes,
+                lastServiceDate: vLastServiceDate || null,
+                lastServiceMileage: vLastServiceMileage || null
             } : null
         }
 
@@ -69,6 +73,7 @@ export function ClientRegistrationDrawer({ isOpen, onClose, onSuccess }: ClientR
         setCName(''); setCPhone(''); setCEmail(''); setCLocation('')
         setVPlate(''); setVMake(''); setVModel(''); setVYear('')
         setVPrevWork(''); setVHistory(''); setVNotes('')
+        setVLastServiceDate(''); setVLastServiceMileage('')
     }
 
     if (!isOpen) return null
@@ -128,6 +133,16 @@ export function ClientRegistrationDrawer({ isOpen, onClose, onSuccess }: ClientR
                                 <div className="form-group">
                                     <label className="form-label">Model Name</label>
                                     <input className="form-input" value={vModel} onChange={e => setVModel(e.target.value)} placeholder="Camry" />
+                                </div>
+                            </div>
+                            <div className="grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                                <div className="form-group">
+                                    <label className="form-label">Last Service Date (Optional)</label>
+                                    <input className="form-input" type="date" value={vLastServiceDate} onChange={e => setVLastServiceDate(e.target.value)} />
+                                </div>
+                                <div className="form-group">
+                                    <label className="form-label">Mileage at Last Service (km)</label>
+                                    <input className="form-input" type="number" value={vLastServiceMileage} onChange={e => setVLastServiceMileage(e.target.value)} placeholder="e.g. 45000" />
                                 </div>
                             </div>
                             <div className="form-group">

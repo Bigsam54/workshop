@@ -5,10 +5,16 @@ import { useAuth } from '@/context/AuthContext'
 import { useToast } from '@/components/Toast'
 import { AppSidebar } from '@/components/AppSidebar'
 import { formatCurrency } from '@/components/ui'
-import { Plus, X, AlertTriangle, RefreshCw, Package } from 'lucide-react'
+import { Plus, X, AlertTriangle, RefreshCw, Package, Pencil, History } from 'lucide-react'
 
 interface Part {
     id: number; name: string; sku: string; unitPrice: number; stockQty: number; lowStockLevel: number
+}
+
+interface Movement {
+    id: number; type: string; qty: number; previousQty: number | null; newQty: number | null
+    note: string | null; timestamp: string
+    createdByUser: { name: string }
 }
 
 export default function InventoryPage() {
@@ -29,6 +35,13 @@ export default function InventoryPage() {
 
     // Adjust form fields
     const [adjType, setAdjType] = useState('IN'); const [adjQty, setAdjQty] = useState('1'); const [adjNote, setAdjNote] = useState('')
+    const [movements, setMovements] = useState<Movement[]>([])
+    const [fetchingMovements, setFetchingMovements] = useState(false)
+
+    // Edit part form fields
+    const [showEditPart, setShowEditPart] = useState(false)
+    const [ePName, setEPName] = useState(''); const [ePSku, setEPSku] = useState('')
+    const [ePPrice, setEPPrice] = useState(''); const [ePLowStock, setEPLowStock] = useState('')
 
     const fetchParts = useCallback(() => {
         fetch('/api/parts').then(r => r.json()).then(setParts).finally(() => setFetching(false))
@@ -59,6 +72,18 @@ export default function InventoryPage() {
         setSaving(false)
     }
 
+    const fetchMovements = (partId: number) => {
+        setFetchingMovements(true)
+        fetch(`/api/inventory/adjust?partId=${partId}`).then(r => r.json()).then(setMovements).finally(() => setFetchingMovements(false))
+    }
+
+    const openAdjust = (p: Part) => {
+        setSelectedPart(p)
+        setAdjType('IN')
+        setShowAdjust(true)
+        fetchMovements(p.id)
+    }
+
     const adjustStock = async (e: FormEvent) => {
         e.preventDefault()
         if (!selectedPart) return
@@ -69,12 +94,41 @@ export default function InventoryPage() {
             body: JSON.stringify({ partId: selectedPart.id, type: adjType, qty: Number(adjQty), note: adjNote })
         })
         if (res.ok) {
+            const d = await res.json()
             toast('Stock levels updated', 'success')
-            setShowAdjust(false)
-            setAdjQty('1'); setAdjNote(''); setAdjType('IN'); fetchParts()
+            setSelectedPart(prev => prev ? { ...prev, stockQty: d.newQty } : prev)
+            setAdjQty('1'); setAdjNote(''); setAdjType('IN')
+            fetchParts()
+            fetchMovements(selectedPart.id)
         } else {
             const d = await res.json()
             toast(d.error || 'Failed to update stock', 'error')
+        }
+        setSaving(false)
+    }
+
+    const openEditPart = (p: Part) => {
+        setSelectedPart(p)
+        setEPName(p.name); setEPSku(p.sku); setEPPrice(String(p.unitPrice)); setEPLowStock(String(p.lowStockLevel))
+        setShowEditPart(true)
+    }
+
+    const saveEditPart = async (e: FormEvent) => {
+        e.preventDefault()
+        if (!selectedPart) return
+        setSaving(true)
+        const res = await fetch(`/api/parts/${selectedPart.id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: ePName, sku: ePSku, unitPrice: Number(ePPrice), lowStockLevel: Number(ePLowStock) })
+        })
+        if (res.ok) {
+            toast('Inventory item updated', 'success')
+            setShowEditPart(false)
+            fetchParts()
+        } else {
+            const d = await res.json()
+            toast(d.error || 'Failed to update item', 'error')
         }
         setSaving(false)
     }
@@ -145,9 +199,14 @@ export default function InventoryPage() {
                                                         </span>
                                                     </td>
                                                     <td style={{ textAlign: 'right' }}>
-                                                        <button className="btn btn-secondary btn-xs" onClick={() => { setSelectedPart(p); setAdjType('IN'); setShowAdjust(true) }}>
-                                                            <RefreshCw size={12} /> Stock Log
-                                                        </button>
+                                                        <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+                                                            <button className="btn btn-secondary btn-xs" onClick={() => openEditPart(p)}>
+                                                                <Pencil size={12} /> Edit
+                                                            </button>
+                                                            <button className="btn btn-secondary btn-xs" onClick={() => openAdjust(p)}>
+                                                                <RefreshCw size={12} /> Stock Log
+                                                            </button>
+                                                        </div>
                                                     </td>
                                                 </tr>
                                             )
@@ -202,9 +261,49 @@ export default function InventoryPage() {
                 </div>
             )}
 
+            {showEditPart && selectedPart && (
+                <div className="modal-overlay" onClick={() => setShowEditPart(false)}>
+                    <div className="modal" onClick={e => e.stopPropagation()}>
+                        <div className="modal-header">
+                            <h2>Edit Inventory Item</h2>
+                            <button className="btn btn-secondary btn-icon btn-sm" onClick={() => setShowEditPart(false)}><X size={16} /></button>
+                        </div>
+                        <form onSubmit={saveEditPart}>
+                            <div className="modal-body">
+                                <div className="form-group">
+                                    <label className="form-label">Part Name / Brand / Specifications</label>
+                                    <input className="form-input" value={ePName} onChange={e => setEPName(e.target.value)} required />
+                                </div>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+                                    <div className="form-group">
+                                        <label className="form-label">SKU Number</label>
+                                        <input className="form-input" value={ePSku} onChange={e => setEPSku(e.target.value)} required />
+                                    </div>
+                                    <div className="form-group">
+                                        <label className="form-label">Retail Price (GH₵)</label>
+                                        <input className="form-input" type="number" value={ePPrice} onChange={e => setEPPrice(e.target.value)} required />
+                                    </div>
+                                    <div className="form-group">
+                                        <label className="form-label">Minimum Level</label>
+                                        <input className="form-input" type="number" value={ePLowStock} onChange={e => setEPLowStock(e.target.value)} required />
+                                    </div>
+                                </div>
+                                <div style={{ fontSize: 11, opacity: 0.6 }}>
+                                    Physical stock quantity is changed via &quot;Stock Log&quot; instead, so every change is recorded as a movement.
+                                </div>
+                            </div>
+                            <div className="modal-footer">
+                                <button type="button" className="btn btn-secondary" onClick={() => setShowEditPart(false)}>Cancel</button>
+                                <button type="submit" className="btn btn-primary" disabled={saving}>{saving ? 'Saving...' : 'Save Changes'}</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+
             {showAdjust && selectedPart && (
                 <div className="modal-overlay" onClick={() => setShowAdjust(false)}>
-                    <div className="modal" onClick={e => e.stopPropagation()}>
+                    <div className="modal" onClick={e => e.stopPropagation()} style={{ maxWidth: 560 }}>
                         <div className="modal-header">
                             <div>
                                 <h2>Stock Update</h2>
@@ -240,10 +339,37 @@ export default function InventoryPage() {
                                     <label className="form-label">Note / Reference</label>
                                     <input className="form-input" value={adjNote} onChange={e => setAdjNote(e.target.value)} placeholder="e.g. Supplier delivery or damage write-off" />
                                 </div>
+
+                                <div style={{ marginTop: 8, paddingTop: 20, borderTop: '1px solid var(--border)' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                                        <History size={14} color="var(--primary-light)" />
+                                        <h3 style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--primary-light)', fontWeight: 700, margin: 0 }}>Audit Trail</h3>
+                                    </div>
+                                    {fetchingMovements ? (
+                                        <div style={{ fontSize: 12, opacity: 0.5, padding: '12px 0' }}>Loading history...</div>
+                                    ) : movements.length === 0 ? (
+                                        <div style={{ fontSize: 12, opacity: 0.5, padding: '12px 0' }}>No stock changes recorded yet for this item.</div>
+                                    ) : (
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 220, overflowY: 'auto' }}>
+                                            {movements.map(m => (
+                                                <div key={m.id} style={{ padding: '10px 12px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-app)' }}>
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                                                        <span className="bold" style={{ fontSize: 12 }}>{m.createdByUser?.name || 'Unknown user'}</span>
+                                                        <span style={{ fontSize: 10, opacity: 0.5 }}>{new Date(m.timestamp).toLocaleString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                                                    </div>
+                                                    <div style={{ fontSize: 12 }}>
+                                                        {m.type === 'IN' ? 'Stocked in' : m.type === 'OUT' ? 'Stocked out' : 'Set total'} {m.type !== 'ADJUST' ? `(${m.qty})` : ''} &middot; <span className="bold">{m.previousQty ?? '?'} &rarr; {m.newQty ?? '?'}</span>
+                                                    </div>
+                                                    {m.note && <div style={{ fontSize: 11, opacity: 0.6, marginTop: 4 }}>{m.note}</div>}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                             <div className="modal-footer">
-                                <button type="button" className="btn btn-secondary" onClick={() => setShowAdjust(false)}>Dismiss</button>
-                                <button type="submit" className="btn btn-primary" disabled={saving}>{saving ? 'Saving...' : 'Confirm Logs'}</button>
+                                <button type="button" className="btn btn-secondary" onClick={() => setShowAdjust(false)}>Close</button>
+                                <button type="submit" className="btn btn-primary" disabled={saving}>{saving ? 'Saving...' : 'Confirm Change'}</button>
                             </div>
                         </form>
                     </div>
