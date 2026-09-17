@@ -26,7 +26,7 @@ export default function LoginPage() {
 
     useEffect(() => {
         if (user) {
-            router.replace('/dashboard')
+            router.replace(user.role === 'TECH' ? '/my-jobs' : '/dashboard')
         }
     }, [user, router])
 
@@ -36,9 +36,9 @@ export default function LoginPage() {
         e.preventDefault()
         setLoading(true)
         try {
-            await login(username, password)
+            const loggedInUser = await login(username, password)
             toast('Welcome back! Logged in successfully.', 'success')
-            router.push('/dashboard')
+            router.push(loggedInUser.role === 'TECH' ? '/my-jobs' : '/dashboard')
         } catch (err: unknown) {
             toast((err as Error).message || 'Login failed', 'error')
         } finally {

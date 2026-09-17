@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useAuth } from '@/context/AuthContext'
 import {
     LayoutDashboard, Briefcase, Users, Package, BarChart3,
-    LogOut, Menu, X, Wrench, ListTodo, ShieldAlert
+    LogOut, Menu, X, Wrench, ListTodo, ShieldAlert, UserCog
 } from 'lucide-react'
 import { useState, ReactNode } from 'react'
 
@@ -23,6 +23,7 @@ const navItems: NavItem[] = [
     { href: '/maintenance', label: 'Maintenance', icon: <ShieldAlert size={18} />, role: ['ADMIN', 'SECRETARY'] },
     { href: '/inventory', label: 'Inventory', icon: <Package size={18} />, role: ['ADMIN', 'SECRETARY'] },
     { href: '/reports', label: 'Reports', icon: <BarChart3 size={18} />, role: ['ADMIN'] },
+    { href: '/users', label: 'Team', icon: <UserCog size={18} />, role: ['ADMIN'] },
 ]
 
 export function AppSidebar() {

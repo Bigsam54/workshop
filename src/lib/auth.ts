@@ -1,5 +1,6 @@
 import { SignJWT, jwtVerify } from 'jose'
 import { NextRequest } from 'next/server'
+import { prisma } from '@/lib/prisma'
 
 const secret = new TextEncoder().encode(
     process.env.JWT_SECRET ?? 'workshop-pulse-secret-2024'
@@ -31,5 +32,13 @@ export async function verifyToken(token: string): Promise<JWTPayload | null> {
 export async function getAuthUser(req: NextRequest): Promise<JWTPayload | null> {
     const token = req.cookies.get('token')?.value
     if (!token) return null
-    return verifyToken(token)
+    const payload = await verifyToken(token)
+    if (!payload) return null
+
+    // Re-check active status on every request so a deactivated account is
+    // locked out immediately, rather than only on its next login attempt.
+    const user = await prisma.user.findUnique({ where: { id: payload.userId }, select: { active: true } })
+    if (!user || !user.active) return null
+
+    return payload
 }

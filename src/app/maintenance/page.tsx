@@ -3,8 +3,9 @@ import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/context/AuthContext'
 import { AppSidebar } from '@/components/AppSidebar'
+import { useToast } from '@/components/Toast'
 import { VehicleHealthModal, MAINTENANCE_STATUS_META, MaintenanceItem } from '@/components/VehicleHealthModal'
-import { AlertTriangle, Clock, Phone, Wrench } from 'lucide-react'
+import { AlertTriangle, Clock, Phone, Wrench, CheckCircle2 } from 'lucide-react'
 
 interface AlertVehicle {
     id: number; plateNumber: string; make: string; model: string; year: number
@@ -17,12 +18,14 @@ interface AlertVehicle {
 export default function MaintenancePage() {
     const { user, loading } = useAuth()
     const router = useRouter()
+    const { toast } = useToast()
     const [vehicles, setVehicles] = useState<AlertVehicle[]>([])
     const [overdueCount, setOverdueCount] = useState(0)
     const [dueSoonCount, setDueSoonCount] = useState(0)
     const [fetching, setFetching] = useState(true)
     const [filter, setFilter] = useState<'all' | 'overdue' | 'due_soon'>('all')
     const [healthVehicleId, setHealthVehicleId] = useState<number | null>(null)
+    const [markingId, setMarkingId] = useState<number | null>(null)
 
     const fetchAlerts = useCallback(() => {
         fetch('/api/maintenance-alerts').then(r => r.json()).then(data => {
@@ -36,6 +39,27 @@ export default function MaintenancePage() {
         if (!loading && (!user || (user.role !== 'ADMIN' && user.role !== 'SECRETARY'))) router.replace('/login')
     }, [user, loading, router])
     useEffect(() => { if (user) fetchAlerts() }, [user, fetchAlerts])
+
+    const markServiced = async (v: AlertVehicle) => {
+        if (!confirm(`Mark ${v.plateNumber} as serviced today? This clears all its maintenance items and resets the schedule from today's date/mileage.`)) return
+        setMarkingId(v.id)
+        const mileageNum = v.mileage ? parseInt(v.mileage, 10) : null
+        const res = await fetch(`/api/vehicles/${v.id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                lastServiceDate: new Date().toISOString().slice(0, 10),
+                lastServiceMileage: mileageNum != null && !isNaN(mileageNum) ? mileageNum : null,
+            })
+        })
+        if (res.ok) {
+            toast(`${v.plateNumber} marked as serviced`, 'success')
+            fetchAlerts()
+        } else {
+            toast('Failed to update service record', 'error')
+        }
+        setMarkingId(null)
+    }
 
     const filteredVehicles = vehicles.filter(v => filter === 'all' || v.worstStatus === filter)
 
@@ -123,9 +147,14 @@ export default function MaintenancePage() {
                                                         </div>
                                                     </td>
                                                     <td style={{ textAlign: 'right' }}>
-                                                        <button className="btn btn-secondary btn-xs" onClick={() => setHealthVehicleId(v.id)}>
-                                                            <Wrench size={12} style={{ marginRight: 4 }} /> Update Service
-                                                        </button>
+                                                        <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+                                                            <button className="btn btn-secondary btn-xs" onClick={() => setHealthVehicleId(v.id)}>
+                                                                <Wrench size={12} style={{ marginRight: 4 }} /> Details
+                                                            </button>
+                                                            <button className="btn btn-primary btn-xs" onClick={() => markServiced(v)} disabled={markingId === v.id}>
+                                                                <CheckCircle2 size={12} style={{ marginRight: 4 }} /> {markingId === v.id ? 'Saving...' : 'Mark as Serviced'}
+                                                            </button>
+                                                        </div>
                                                     </td>
                                                 </tr>
                                             ))}

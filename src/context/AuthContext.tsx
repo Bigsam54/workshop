@@ -11,7 +11,7 @@ interface User {
 interface AuthContextType {
     user: User | null
     loading: boolean
-    login: (username: string, password: string) => Promise<void>
+    login: (username: string, password: string) => Promise<User>
     logout: () => Promise<void>
 }
 
@@ -40,6 +40,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
         const data = await res.json()
         setUser(data.user)
+        return data.user
     }
 
     const logout = async () => {
